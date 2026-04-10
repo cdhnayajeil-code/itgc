@@ -1,8 +1,8 @@
 {
   "remark-1": "ERP application 실행 제외\n.NET Sqlclient 시스템 제외\n개발사 접속 IP 제외",
   "q1-detail-1": "<span style=\"color: rgb(26, 26, 46); font-size: 13px; font-weight: 700; white-space-collapse: collapse; background-color: rgb(255, 255, 255);\">매월 ERP권한 변경내역 내역보고서&nbsp; 작성 /</span><span style=\"font-family: inherit;\"> 2026.1.1 부터 Audit관리를 시작하여 현재시점까지 누적관리</span><div><br></div>",
-  "q1-review-1": "<br>",
-  "q1-reviewer-1": "",
+  "q1-review-1": "<b>[관리자 DB 직접변경 승인절차 요청]</b><div><b>- 현재 문제점(AS-IS)</b></div><div>  관리자는 사전 승인 없이 DML 변경 작업을 수행하고 있습니다. 관리자의 임의조작 위험이 존재하며 독립적인 검증이 불가합니다.</div><div><b style=\"font-family: inherit;\"><br></b></div><div><b style=\"font-family: inherit;\">- 개선사항(To-Be)</b></div><div><b style=\"font-family: inherit;\">   </b><span style=\"font-family: inherit;\">관리자에 의한 변경 작업 또한 일반 사용자와 동일하게 사전 승인 절차에 따라 수행되도록 권고드립니다.</span></div><div><b><br></b></div>",
+  "q1-reviewer-1": "조형진",
   "q1-review-date-1": "2026-04-10",
   "remark-2": "",
   "q1-detail-2": "<div><span style=\"background-color: rgb(255, 255, 255); color: rgb(26, 26, 46); font-size: 13px; font-weight: 700; white-space-collapse: collapse; font-family: inherit;\">매월 ERP권한 변경내역 내역보고서&nbsp; 작성 /&nbsp;</span><span style=\"background-color: rgb(255, 255, 255); color: rgb(51, 51, 51); font-family: ng, 나눔고딕; white-space-collapse: collapse;\">분기 OS 및 DB, Superuser 계정권한 모니터링 보고&nbsp;</span></div>",
@@ -59,6 +59,6 @@
   "status-8": "complete",
   "status-9": "complete",
   "status-10": "complete",
-  "_savedAt": "2026-04-10T02:37:30.073Z",
-  "_savedBy": "최동혁"
+  "_savedAt": "2026-04-10T04:14:10.614Z",
+  "_savedBy": "unknown"
 }
