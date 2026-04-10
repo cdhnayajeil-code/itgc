@@ -11,8 +11,8 @@
   "q1-review-date-2": "2026-04-10",
   "remark-3": "",
   "q1-detail-3": "<span style=\"color: rgb(26, 26, 46); font-size: 13px; font-weight: 700; white-space-collapse: collapse; background-color: rgb(255, 255, 255);\">발생시 매월 ERP권한 변경내역 내역보고서&nbsp; 작성 (26년 3월 보고서 포함)</span><div><span style=\"color: rgb(26, 26, 46); font-size: 13px; font-weight: 700; white-space-collapse: collapse; background-color: rgb(255, 255, 255);\"><br></span></div>",
-  "q1-review-3": "<br>",
-  "q1-reviewer-3": "",
+  "q1-review-3": "<b>[로그 기반 트래킹 방식의 모니터링 요청]</b>\n<b>- 현재 문제점(AS-IS)</b>\n<b>시점 비교 방식</b> : &lt;ERP Role 메뉴권한 변경 보고서(2026.03)&gt;는 특정 시점과(T1)과 현재 시점(T2)의 데이터를 비교하는 방식으로 모니터링하여 시점 사이(T1 ~T2)에 '임시권한 부여 및 삭제' 건에 대한 추적은 불가능\n\n - 개선사항(To-Be)<div><b> 로그 기반 트래킹</b> : 상태 비교가 아닌 '이벤트 로그' 중심의 데이터를 대상으로 모니터링\n<b>완전성 검증 절차 추가</b> : 모니터링 대상기간의 조회조건이 명시된 화면 캡처와 추출된 데이터를 첨부\n\n</div>",
+  "q1-reviewer-3": "조형진",
   "q1-review-date-3": "2026-04-10",
   "remark-4": "",
   "q1-detail-4": "<div><span style=\"color: rgb(26, 26, 46); font-size: 13px; font-weight: 700; white-space-collapse: collapse; background-color: rgb(255, 255, 255);\">분기별 DLL변경내역_보고서 작성</span></div>",
@@ -51,7 +51,7 @@
   "q1-review-date-10": "2026-04-10",
   "status-1": "review",
   "status-2": "complete",
-  "status-3": "complete",
+  "status-3": "review",
   "status-4": "complete",
   "status-5": "complete",
   "status-6": "complete",
@@ -59,6 +59,6 @@
   "status-8": "complete",
   "status-9": "complete",
   "status-10": "complete",
-  "_savedAt": "2026-04-10T04:14:10.614Z",
+  "_savedAt": "2026-04-10T04:23:37.576Z",
   "_savedBy": "unknown"
 }
