@@ -1,7 +1,7 @@
 {
   "remark-1": "ERP application 실행 제외\n.NET Sqlclient 시스템 제외\n개발사 접속 IP 제외",
   "q1-detail-1": "<span style=\"color: rgb(26, 26, 46); font-size: 13px; font-weight: 700; white-space-collapse: collapse; background-color: rgb(255, 255, 255);\">매월 ERP권한 변경내역 내역보고서&nbsp; 작성 /</span><span style=\"font-family: inherit;\"> 2026.1.1 부터 Audit관리를 시작하여 현재시점까지 누적관리</span><div><br></div>",
-  "q1-review-1": "<br>",
+  "q1-review-1": "TEST",
   "q1-reviewer-1": "",
   "q1-review-date-1": "2026-04-10",
   "remark-2": "",
@@ -49,7 +49,7 @@
   "q1-review-10": "",
   "q1-reviewer-10": "",
   "q1-review-date-10": "2026-04-10",
-  "status-1": "complete",
+  "status-1": "review",
   "status-2": "complete",
   "status-3": "complete",
   "status-4": "complete",
@@ -59,6 +59,6 @@
   "status-8": "complete",
   "status-9": "complete",
   "status-10": "complete",
-  "_savedAt": "2026-04-10T02:31:58.796Z",
+  "_savedAt": "2026-04-10T02:36:43.910Z",
   "_savedBy": "최동혁"
 }
