@@ -127,4 +127,16 @@ footer.ft{border-top:1px solid var(--line);color:var(--sub);font-size:11.5px;pad
 </section>
 </div></main>
 <footer class="ft"><div class="wrap">제일엠앤에스 ITGC 정리 · R-IT 통제 전체 · 전자결재 실시간 수집(gw.jeilm.co.kr, 2026-07-06) + 기존 증빙자료 연계 · 상대경로 링크는 ITGC 허브 폴더 기준으로 동작합니다.</div></footer>
+<script>
+(function(){
+  function adjustAnchors(){
+    var nav=document.querySelector('nav.jump');
+    var h=(nav?nav.offsetHeight:60)+12;
+    document.querySelectorAll('section.ctrl').forEach(function(s){s.style.scrollMarginTop=h+'px'});
+  }
+  window.addEventListener('load',adjustAnchors);
+  window.addEventListener('resize',adjustAnchors);
+  adjustAnchors();
+})();
+</script>
 </body></html>
