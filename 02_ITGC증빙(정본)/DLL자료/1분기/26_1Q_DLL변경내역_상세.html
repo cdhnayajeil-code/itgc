@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DLL 변경내역 상세 보고서 - FY26 1분기</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: '맑은 고딕', 'Malgun Gothic', Arial, sans-serif;
+            font-size: 13px;
+            color: #1d2433;
+            line-height: 1.5;
+            background: #f5f7fa;
+            padding: 30px 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 40px 36px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 6px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 13px;
+            color: #868e96;
+            margin-bottom: 28px;
+        }
+
+        /* 요약 카드 */
+        .summary-cards {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .card {
+            flex: 1;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 16px;
+            text-align: center;
+            background: #fafbfc;
+        }
+        .card .label {
+            font-size: 11px;
+            color: #868e96;
+            margin-bottom: 6px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .card .value {
+            font-size: 26px;
+            font-weight: 800;
+        }
+        .card .sub {
+            font-size: 10px;
+            color: #adb5bd;
+            margin-top: 2px;
+        }
+        .card.total .value { color: #1e3a5f; }
+        .card.prod .value { color: #c92a2a; }
+        .card.dev .value { color: #1971c2; }
+        .card.module .value { color: #e67700; font-size: 18px; }
+        .card.period .value { color: #2b8a3e; font-size: 14px; font-weight: 700; }
+
+        /* 섹션 제목 */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin: 28px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 10px;
+            color: #fff;
+        }
+        .badge-prod { background: #c92a2a; }
+        .badge-dev { background: #1971c2; }
+        .badge-info { background: #868e96; }
+
+        /* 변경사유 그룹 헤더 */
+        .group-header {
+            background: #f1f3f5;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px 16px;
+            margin: 18px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .group-header .reason {
+            font-size: 14px;
+            font-weight: 700;
+            color: #343a40;
+        }
+        .group-header .meta {
+            font-size: 11px;
+            color: #868e96;
+        }
+        .group-header .count {
+            margin-left: auto;
+            font-size: 12px;
+            font-weight: 700;
+            color: #495057;
+            background: #dee2e6;
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+
+        /* 테이블 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+        }
+        table thead th {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #495057;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        table tbody td {
+            border: 1px solid #dee2e6;
+            padding: 7px 10px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+        table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .cell-center { text-align: center; }
+        .cell-right { text-align: right; }
+        .cell-mono {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 11px;
+            word-break: break-all;
+        }
+        .cell-path {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 10px;
+            color: #868e96;
+            word-break: break-all;
+        }
+        .cell-date {
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        .cell-size {
+            font-size: 11px;
+            text-align: right;
+            white-space: nowrap;
+            font-family: 'Consolas', monospace;
+        }
+
+        /* 드라이브 뱃지 */
+        .drive-badge {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .drive-D { background: #c92a2a; }
+        .drive-E { background: #1971c2; }
+
+        /* 모듈 뱃지 */
+        .module-badge {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .module-HR { background: #dbe4ff; color: #364fc7; }
+        .module-TAX { background: #fff3bf; color: #e67700; }
+
+        /* 파일 유형 뱃지 */
+        .type-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .type-UI { background: #d3f9d8; color: #2b8a3e; }
+        .type-BL { background: #e7f5ff; color: #1864ab; }
+        .type-FW { background: #fff4e6; color: #d9480f; }
+
+        /* 서브그룹 */
+        .subgroup-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #495057;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border-left: 3px solid #1971c2;
+            margin: 12px 0 6px 0;
+        }
+
+        /* 타임라인 */
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+            margin: 16px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 18px;
+            padding: 12px 16px;
+            background: #fafbfc;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 16px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #1e3a5f;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #1e3a5f;
+        }
+        .timeline-date {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 4px;
+        }
+        .timeline-desc {
+            font-size: 12px;
+            color: #495057;
+        }
+        .timeline-files {
+            font-size: 11px;
+            color: #868e96;
+            margin-top: 4px;
+            font-family: 'Consolas', monospace;
+        }
+
+        /* 풋터 */
+        .footer {
+            margin-top: 30px;
+            padding-top: 16px;
+            border-top: 1px solid #e9ecef;
+            font-size: 11px;
+            color: #adb5bd;
+            text-align: center;
+        }
+
+        /* 인쇄 최적화 */
+        @media print {
+            body { background: #fff; padding: 10px; }
+            .container { box-shadow: none; padding: 20px; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; }
+            .summary-cards { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>DLL 변경내역 상세 보고서</h1>
+    <p class="subtitle">FY26 1분기 (2026-01-01 ~ 2026-03-31) | 대상 시스템: [DB-ACCOUNT] | 보고자: 최동혁 (매니저/총무팀)</p>
+
+    <!-- ===== 요약 카드 ===== -->
+    <div class="summary-cards">
+        <div class="card total">
+            <div class="label">전체 변경 파일</div>
+            <div class="value">38</div>
+            <div class="sub">DLL Files</div>
+        </div>
+        <div class="card prod">
+            <div class="label">운영서버 배포 (D:\)</div>
+            <div class="value">4</div>
+            <div class="sub">감사 대상</div>
+        </div>
+        <div class="card dev">
+            <div class="label">비운영 스캔 (E:\)</div>
+            <div class="value">34</div>
+            <div class="sub">개발/검증 환경</div>
+        </div>
+        <div class="card module">
+            <div class="label">변경 모듈</div>
+            <div class="value">HR, TAX</div>
+            <div class="sub">2개 모듈</div>
+        </div>
+        <div class="card period">
+            <div class="label">변경 요청</div>
+            <div class="value">3건</div>
+            <div class="sub">세무패치 / 급여오류확인 / 급여오류수정</div>
+        </div>
+    </div>
+
+    <!-- ===== 변경 타임라인 ===== -->
+    <div class="section-title">변경 타임라인</div>
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="timeline-date">2026-01-07 (화) - 세무 정기패치</div>
+            <div class="timeline-desc">
+                <span class="module-badge module-TAX">TAX</span>
+                운영서버(D:\)에 세무 모듈 DLL 2건 배포
+            </div>
+            <div class="timeline-files">TX102MA1.dll (88.5 KB), TX604MA1.dll (341.5 KB)</div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-date">2026-02-23 (월) - 급여집계 오류 확인</div>
+            <div class="timeline-desc">
+                <span class="module-badge module-HR">HR</span>
+                비운영(E:\) 환경에서 급여집계 관련 오류 확인 작업 수행. 소스/빌드/지원 디렉토리 내 34건 스캔 감지
+            </div>
+            <div class="timeline-files">H6011Q3_KO174 (UI), PH60G12_KO174 (BL) + Framework 참조 DLL 다수</div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-date">2026-03-16 (월) - 급여집계 오류 수정</div>
+            <div class="timeline-desc">
+                <span class="module-badge module-HR">HR</span>
+                오류 수정 완료 후 운영서버(D:\)에 수정된 DLL 2건 최종 배포
+            </div>
+            <div class="timeline-files">H6011Q3_KO174.dll (152.5 KB), PH60G12_KO174.dll (146.0 KB)</div>
+        </div>
+    </div>
+
+    <!-- ===== 운영서버 배포 내역 (D:\) ===== -->
+    <div class="section-title">
+        운영서버 배포 내역 (D:\) - 감사 대상
+        <span class="badge badge-prod">4건</span>
+    </div>
+
+    <!-- 세무 정기패치 그룹 -->
+    <div class="group-header">
+        <span class="module-badge module-TAX">TAX</span>
+        <span class="reason">세무 정기패치</span>
+        <span class="meta">2026-01-07 | 정기 업데이트</span>
+        <span class="count">2건</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:26%">파일명</th>
+                <th style="width:30%">전체 경로</th>
+                <th style="width:16%">변경일시</th>
+                <th style="width:9%">파일크기</th>
+                <th style="width:7%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">1</td>
+                <td class="cell-center"><span class="drive-badge drive-D">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TX102MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-01-07 18:53:40</td>
+                <td class="cell-size">88.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">2</td>
+                <td class="cell-center"><span class="drive-badge drive-D">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TX604MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-01-07 18:53:40</td>
+                <td class="cell-size">341.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 급여집계 오류 수정 그룹 -->
+    <div class="group-header">
+        <span class="module-badge module-HR">HR</span>
+        <span class="reason">급여집계 오류 수정</span>
+        <span class="meta">2026-03-16 | 버그 수정 배포</span>
+        <span class="count">2건</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:26%">파일명</th>
+                <th style="width:30%">전체 경로</th>
+                <th style="width:16%">변경일시</th>
+                <th style="width:9%">파일크기</th>
+                <th style="width:7%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">3</td>
+                <td class="cell-center"><span class="drive-badge drive-D">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.HR.H6011Q3_KO174.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\HR\</td>
+                <td class="cell-center cell-date">2026-03-16 16:40:48</td>
+                <td class="cell-size">152.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">4</td>
+                <td class="cell-center"><span class="drive-badge drive-D">D</span></td>
+                <td class="cell-mono">Bizentro.App.BL.HR.PH60G12_KO174.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\WebApp\bin\</td>
+                <td class="cell-center cell-date">2026-03-16 16:40:35</td>
+                <td class="cell-size">146.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-BL">BL</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ===== 비운영 환경 스캔 내역 (E:\) ===== -->
+    <div class="section-title">
+        비운영 환경 스캔 내역 (E:\) - 개발/검증
+        <span class="badge badge-dev">34건</span>
+    </div>
+
+    <div class="group-header">
+        <span class="module-badge module-HR">HR</span>
+        <span class="reason">급여집계 오류 확인</span>
+        <span class="meta">2026-02-23 | 개발/검증 환경 스캔</span>
+        <span class="count">34건</span>
+    </div>
+
+    <!-- 소스 UI 영역 -->
+    <div class="subgroup-label">UI 소스 빌드 영역 (E:\ERP_SOURCE\UI\HR\)</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:30%">파일명</th>
+                <th style="width:30%">디렉토리 경로</th>
+                <th style="width:14%">변경일시</th>
+                <th style="width:8%">파일크기</th>
+                <th style="width:6%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">5</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.UI.HR.H6011Q3_KO174.XmlSerializers.dll</td>
+                <td class="cell-path">...\H6011Q3_KO174\bin\Release\</td>
+                <td class="cell-center cell-date">2026-02-23 17:34:22</td>
+                <td class="cell-size">25.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">6</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.UI.HR.H6011Q3_KO174.XmlSerializers.dll</td>
+                <td class="cell-path">...\H6011Q3_KO174\obj\Release\</td>
+                <td class="cell-center cell-date">2026-02-23 17:34:22</td>
+                <td class="cell-size">25.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">7</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.UI.HR.H6011Q3_KO174.dll</td>
+                <td class="cell-path">...\H6011Q3_KO174\obj\Release\</td>
+                <td class="cell-center cell-date">2026-02-23 17:34:22</td>
+                <td class="cell-size">151.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">8</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.UI.HR.H6011Q3_KO174.dll</td>
+                <td class="cell-path">...\H6011Q3_KO174\bin\Release\</td>
+                <td class="cell-center cell-date">2026-02-23 17:34:22</td>
+                <td class="cell-size">151.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">9</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.UI.HR.H6011Q3_KO174.dll</td>
+                <td class="cell-path">...\H6011Q3_KO174\obj\Debug\</td>
+                <td class="cell-center cell-date">2026-02-23 15:15:34</td>
+                <td class="cell-size">165.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 지원 백업 영역 -->
+    <div class="subgroup-label">지원/백업 영역 (E:\[DB-ACCOUNT]_지원\)</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:30%">파일명</th>
+                <th style="width:30%">디렉토리 경로</th>
+                <th style="width:14%">변경일시</th>
+                <th style="width:8%">파일크기</th>
+                <th style="width:6%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">10</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.UI.HR.H6011Q3_KO174.dll</td>
+                <td class="cell-path">E:\[DB-ACCOUNT]_지원\20260223_기간별급여집계조회\</td>
+                <td class="cell-center cell-date">2026-02-23 17:34:22</td>
+                <td class="cell-size">151.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-UI">UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">11</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.BL.HR.PH60G12_KO174.dll</td>
+                <td class="cell-path">E:\[DB-ACCOUNT]_지원\20260223_기간별급여집계조회\</td>
+                <td class="cell-center cell-date">2026-02-23 17:33:09</td>
+                <td class="cell-size">145.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-BL">BL</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- WebApp BL 소스 영역 -->
+    <div class="subgroup-label">WebApp BL 소스 빌드 영역 (E:\ERP_SOURCE\WebApp\)</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:34%">파일명</th>
+                <th style="width:22%">빌드 위치</th>
+                <th style="width:14%">변경일시</th>
+                <th style="width:8%">파일크기</th>
+                <th style="width:6%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 핵심 BL DLL -->
+            <tr style="background:#f8f9fa;">
+                <td colspan="7" style="padding:5px 10px;font-size:11px;font-weight:600;color:#495057;border:1px solid #dee2e6;">
+                    핵심 비즈니스 로직 DLL
+                </td>
+            </tr>
+            <tr>
+                <td class="cell-center">12</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.BL.HR.PH60G12_KO174.dll</td>
+                <td class="cell-path">obj\Release\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:08</td>
+                <td class="cell-size">145.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-BL">BL</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">13</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.BL.HR.PH60G12_KO174.dll</td>
+                <td class="cell-path">obj\Debug\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">157.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-BL">BL</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">14</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.BL.HR.PH60G12_KO174.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:06</td>
+                <td class="cell-size">145.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-BL">BL</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">15</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.App.BL.HR.PH60G11.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:06</td>
+                <td class="cell-size">122.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-BL">BL</span></td>
+            </tr>
+
+            <!-- Framework 참조 DLL -->
+            <tr style="background:#f8f9fa;">
+                <td colspan="7" style="padding:5px 10px;font-size:11px;font-weight:600;color:#495057;border:1px solid #dee2e6;">
+                    Framework / AppFramework 참조 DLL (빌드 시 함께 출력)
+                </td>
+            </tr>
+            <tr>
+                <td class="cell-center">16</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.Framework.Web.Compression.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">11.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">17</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.Framework.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">23.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">18</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.WcfContract.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">7.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">19</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.UI.WebCommunicator.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">92.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">20</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.UI.Variables.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">24.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">21</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.UI.Providers.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">12.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">22</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.UI.Common.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">55.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">23</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.SharedWCFUtils.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">12.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">24</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.SharedDataContract.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">5.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">25</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.Service.Log.Formatter.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">9.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">26</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.Service.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">47.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">27</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.SequencalDataTransfer.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">26.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">28</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.ScriptService.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">198.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">29</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.License.SharedLicenseDataContract.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">35.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">30</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.License.LicenseWCFServiceContract.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">8.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">31</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.License.LicenseAgentWCFServiceContract.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">9.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">32</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.License.Communicator.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">66.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">33</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.Facade.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">36.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">34</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.DataBridgeCarrier.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">14.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">35</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.DataBridge.XmlSerializers.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">22.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">36</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.DataBridge.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:07</td>
+                <td class="cell-size">53.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">37</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.Common.Files.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:06</td>
+                <td class="cell-size">8.5 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">38</td>
+                <td class="cell-center"><span class="drive-badge drive-E">E</span></td>
+                <td class="cell-mono">Bizentro.AppFramework.Common.dll</td>
+                <td class="cell-path">bin\</td>
+                <td class="cell-center cell-date">2026-02-23 16:54:06</td>
+                <td class="cell-size">9.0 KB</td>
+                <td class="cell-center"><span class="type-badge type-FW">FW</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ===== 파일 분석 요약 ===== -->
+    <div class="section-title">
+        파일 분석 요약
+        <span class="badge badge-info">통계</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:20%">구분</th>
+                <th style="width:16%">파일 수</th>
+                <th style="width:16%">비율</th>
+                <th style="width:48%">설명</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding:8px;border:1px solid #dee2e6;font-weight:600;">
+                    <span class="type-badge type-UI">UI</span> UI 계층
+                </td>
+                <td class="cell-center" style="border:1px solid #dee2e6;font-weight:700;">8</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;">21.1%</td>
+                <td style="padding:8px;border:1px solid #dee2e6;font-size:11px;color:#666;">
+                    화면단 DLL (Bizentro.App.UI.*) - TAX 2건, HR 6건
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:8px;border:1px solid #dee2e6;font-weight:600;">
+                    <span class="type-badge type-BL">BL</span> BL 계층
+                </td>
+                <td class="cell-center" style="border:1px solid #dee2e6;font-weight:700;">6</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;">15.8%</td>
+                <td style="padding:8px;border:1px solid #dee2e6;font-size:11px;color:#666;">
+                    비즈니스 로직 DLL (Bizentro.App.BL.*) - PH60G12, PH60G11
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:8px;border:1px solid #dee2e6;font-weight:600;">
+                    <span class="type-badge type-FW">FW</span> Framework
+                </td>
+                <td class="cell-center" style="border:1px solid #dee2e6;font-weight:700;">24</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;">63.2%</td>
+                <td style="padding:8px;border:1px solid #dee2e6;font-size:11px;color:#666;">
+                    프레임워크 참조 DLL (빌드 시 자동 출력) - 비운영 환경에만 존재
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:25%">드라이브</th>
+                <th style="width:15%">파일 수</th>
+                <th style="width:20%">총 크기</th>
+                <th style="width:40%">성격</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding:8px;border:1px solid #dee2e6;font-weight:600;">
+                    <span class="drive-badge drive-D">D</span> 운영서버
+                </td>
+                <td class="cell-center" style="border:1px solid #dee2e6;font-weight:700;color:#c92a2a;">4건</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;">728.5 KB</td>
+                <td style="padding:8px;border:1px solid #dee2e6;font-size:11px;color:#666;">
+                    실제 운영 환경 배포 파일 - <b style="color:#c92a2a;">ITGC 감사 대상</b>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:8px;border:1px solid #dee2e6;font-weight:600;">
+                    <span class="drive-badge drive-E">E</span> 비운영
+                </td>
+                <td class="cell-center" style="border:1px solid #dee2e6;font-weight:700;color:#1971c2;">34건</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;">약 1.8 MB</td>
+                <td style="padding:8px;border:1px solid #dee2e6;font-size:11px;color:#666;">
+                    소스코드 빌드 출력(bin/obj), 지원 백업 등 개발/검증 환경
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 풋터 -->
+    <div class="footer">
+        DLL 변경내역 상세 보고서 | FY26 1분기 | 생성일: 2026-03-31 | 대상 시스템: [DB-ACCOUNT]<br>
+        본 문서는 DLL_FILES_2026.csv 원본 데이터 기준으로 자동 생성되었습니다.
+    </div>
+
+</div>
+</body>
+</html>

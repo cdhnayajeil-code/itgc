@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DLL 변경내역 상세 보고서 - FY26 2Q</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: '맑은 고딕', 'Malgun Gothic', Arial, sans-serif; font-size: 13px; color: #1d2433; line-height: 1.5; background: #f5f7fa; padding: 30px 20px; }
+        .container { max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 40px 36px; }
+        h1 { text-align: center; font-size: 22px; font-weight: 700; color: #1e3a5f; margin-bottom: 6px; }
+        .subtitle { text-align: center; font-size: 13px; color: #868e96; margin-bottom: 28px; }
+        .summary-cards { display: flex; gap: 12px; margin-bottom: 28px; }
+        .card { flex: 1; border: 1px solid #e9ecef; border-radius: 6px; padding: 16px; text-align: center; background: #fafbfc; }
+        .card .label { font-size: 11px; color: #868e96; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px; }
+        .card .value { font-size: 26px; font-weight: 800; }
+        .card .sub { font-size: 10px; color: #adb5bd; margin-top: 2px; }
+        .card.total .value { color: #1e3a5f; }
+        .card.prod .value { color: #c92a2a; }
+        .card.module .value { color: #e67700; font-size: 18px; }
+        .card.times .value { color: #1971c2; }
+        .card.period .value { color: #2b8a3e; font-size: 14px; font-weight: 700; }
+        .section-title { font-size: 15px; font-weight: 700; color: #1e3a5f; margin: 28px 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #1e3a5f; display: flex; align-items: center; gap: 8px; }
+        .section-title .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 10px; color: #fff; }
+        .badge-prod { background: #c92a2a; }
+        .badge-info { background: #868e96; }
+        .notice { background: #fff9db; border: 1px solid #ffe066; border-radius: 6px; padding: 10px 16px; font-size: 12px; color: #862e00; margin-bottom: 20px; }
+        .group-header { background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px 16px; margin: 18px 0 10px 0; display: flex; align-items: center; gap: 14px; }
+        .group-header .reason { font-size: 14px; font-weight: 700; color: #343a40; }
+        .group-header .meta { font-size: 11px; color: #868e96; }
+        .group-header .count { margin-left: auto; font-size: 12px; font-weight: 700; color: #495057; background: #dee2e6; padding: 2px 10px; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+        table thead th { background: #f8f9fa; border: 1px solid #dee2e6; padding: 8px 10px; font-size: 11px; font-weight: 700; color: #495057; text-align: center; vertical-align: middle; white-space: nowrap; }
+        table tbody td { border: 1px solid #dee2e6; padding: 7px 10px; font-size: 12px; vertical-align: middle; }
+        table tbody tr:hover { background: #f8f9fa; }
+        .cell-center { text-align: center; }
+        .cell-mono { font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; word-break: break-all; }
+        .cell-path { font-family: 'Consolas', 'Courier New', monospace; font-size: 10px; color: #868e96; word-break: break-all; }
+        .cell-date { font-size: 11px; white-space: nowrap; }
+        .cell-size { font-size: 11px; text-align: right; white-space: nowrap; font-family: 'Consolas', monospace; }
+        .drive-badge { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 4px; font-size: 11px; font-weight: 800; color: #fff; background: #c92a2a; }
+        .timeline { position: relative; padding-left: 28px; margin: 16px 0; }
+        .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+        .timeline-item { position: relative; margin-bottom: 18px; padding: 12px 16px; background: #fafbfc; border: 1px solid #e9ecef; border-radius: 6px; }
+        .timeline-item::before { content: ''; position: absolute; left: -24px; top: 16px; width: 10px; height: 10px; border-radius: 50%; background: #1e3a5f; border: 2px solid #fff; box-shadow: 0 0 0 2px #1e3a5f; }
+        .timeline-date { font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 4px; }
+        .timeline-desc { font-size: 12px; color: #495057; }
+        .timeline-files { font-size: 11px; color: #868e96; margin-top: 4px; font-family: 'Consolas', monospace; }
+        .footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid #e9ecef; font-size: 11px; color: #adb5bd; text-align: center; }
+        @media print { body { background: #fff; padding: 10px; } .container { box-shadow: none; padding: 20px; } table { page-break-inside: auto; } tr { page-break-inside: avoid; } .summary-cards { flex-wrap: wrap; } }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>DLL 변경내역 상세 보고서</h1>
+    <p class="subtitle">FY26 2Q (2026-04-01 ~ 2026-06-30) | 대상 시스템: [DB-ACCOUNT] | 보고자: 최동혁 (매니저/총무팀)</p>
+    <div class="summary-cards">
+        <div class="card total">
+            <div class="label">전체 변경 파일</div>
+            <div class="value">13</div>
+            <div class="sub">DLL Files</div>
+        </div>
+        <div class="card prod">
+            <div class="label">운영서버 배포 (D:\)</div>
+            <div class="value">13</div>
+            <div class="sub">감사 대상</div>
+        </div>
+        <div class="card module">
+            <div class="label">변경 모듈</div>
+            <div class="value">TAX, HR</div>
+            <div class="sub">2개 모듈</div>
+        </div>
+        <div class="card times">
+            <div class="label">변경 시점</div>
+            <div class="value">5</div>
+            <div class="sub">배포 회차</div>
+        </div>
+        <div class="card period">
+            <div class="label">조회 범위</div>
+            <div class="value">D:\Bizentro.NET</div>
+            <div class="sub">운영 배포 경로 한정</div>
+        </div>
+    </div>
+
+    <div class="section-title">변경 타임라인</div>
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="timeline-date">2026-04-07 (화) - 인사모듈 세법변경 업데이트 반영</div>
+            <div class="timeline-desc"><span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#fff3bf;color:#e67700;'>TAX</span> 운영서버(D:\Bizentro.NET)에 DLL 1건 배포</div>
+            <div class="timeline-files">Bizentro.App.UI.TAX.TH102MA1.dll (110.5 KB)</div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-date">2026-04-09 (목) - 인사모듈 세법변경 업데이트 반영</div>
+            <div class="timeline-desc"><span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#fff3bf;color:#e67700;'>TAX</span> 운영서버(D:\Bizentro.NET)에 DLL 4건 배포</div>
+            <div class="timeline-files">Bizentro.App.UI.TAX.TX604MA1.dll (344.5 KB), Bizentro.App.UI.TAX.TX304MA1.dll (99 KB), Bizentro.App.UI.TAX.TX601MA1.dll (533 KB), Bizentro.App.UI.TAX.TX312MA1.dll (107 KB)</div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-date">2026-05-28 (목) - 인사모듈 세법변경 업데이트 반영</div>
+            <div class="timeline-desc"><span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#fff3bf;color:#e67700;'>TAX</span> 운영서버(D:\Bizentro.NET)에 DLL 6건 배포</div>
+            <div class="timeline-files">Bizentro.App.UI.TAX.TJ204MA1.dll (224 KB), Bizentro.App.UI.TAX.TJ206OA1.dll (38.5 KB), Bizentro.App.UI.TAX.TJ102MA1.dll (211 KB), Bizentro.App.UI.TAX.TH101BA3.dll (266 KB), Bizentro.App.UI.TAX.TJ102MA2.dll (162 KB), Bizentro.App.UI.TAX.TJ203MA2.dll (135.5 KB)</div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-date">2026-06-08 (월) - 인사모듈 세법변경 업데이트 반영</div>
+            <div class="timeline-desc"><span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#dbe4ff;color:#364fc7;'>HR</span> 운영서버(D:\Bizentro.NET)에 DLL 1건 배포</div>
+            <div class="timeline-files">uniERP.WebApp.WebSiteNETv2.HR_2026.dll (573.5 KB)</div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-date">2026-06-10 (수) - 인사모듈 세법변경 업데이트 반영</div>
+            <div class="timeline-desc"><span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#fff3bf;color:#e67700;'>TAX</span> 운영서버(D:\Bizentro.NET)에 DLL 1건 배포</div>
+            <div class="timeline-files">Bizentro.App.UI.TAX.TH105OA1.dll (134.5 KB)</div>
+        </div>
+    </div>
+
+    <div class="section-title">
+        운영서버 배포 내역 (D:\) - 감사 대상
+        <span class="badge badge-prod">13건</span>
+    </div>
+    <div class="group-header">
+        <span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#fff3bf;color:#e67700;'>TAX</span>
+        <span class="reason">인사모듈 세법변경 업데이트 반영</span>
+        <span class="meta">2026-04-07</span>
+        <span class="count">1건</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:28%">파일명</th>
+                <th style="width:30%">전체 경로</th>
+                <th style="width:14%">변경일시</th>
+                <th style="width:9%">파일크기</th>
+                <th style="width:7%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">1</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TH102MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-04-07 17:14:27</td>
+                <td class="cell-size">110.5 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="group-header">
+        <span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#fff3bf;color:#e67700;'>TAX</span>
+        <span class="reason">인사모듈 세법변경 업데이트 반영</span>
+        <span class="meta">2026-04-09</span>
+        <span class="count">4건</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:28%">파일명</th>
+                <th style="width:30%">전체 경로</th>
+                <th style="width:14%">변경일시</th>
+                <th style="width:9%">파일크기</th>
+                <th style="width:7%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">2</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TX304MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-04-09 09:50:13</td>
+                <td class="cell-size">99 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">3</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TX312MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-04-09 09:50:13</td>
+                <td class="cell-size">107 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">4</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TX601MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-04-09 09:50:13</td>
+                <td class="cell-size">533 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">5</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TX604MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-04-09 09:50:13</td>
+                <td class="cell-size">344.5 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="group-header">
+        <span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#fff3bf;color:#e67700;'>TAX</span>
+        <span class="reason">인사모듈 세법변경 업데이트 반영</span>
+        <span class="meta">2026-05-28</span>
+        <span class="count">6건</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:28%">파일명</th>
+                <th style="width:30%">전체 경로</th>
+                <th style="width:14%">변경일시</th>
+                <th style="width:9%">파일크기</th>
+                <th style="width:7%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">6</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TH101BA3.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-05-28 16:55:43</td>
+                <td class="cell-size">266 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">7</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TJ102MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-05-28 16:55:43</td>
+                <td class="cell-size">211 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">8</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TJ102MA2.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-05-28 16:55:43</td>
+                <td class="cell-size">162 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">9</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TJ203MA2.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-05-28 16:55:43</td>
+                <td class="cell-size">135.5 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">10</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TJ204MA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-05-28 16:55:43</td>
+                <td class="cell-size">224 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+            <tr>
+                <td class="cell-center">11</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TJ206OA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-05-28 16:55:43</td>
+                <td class="cell-size">38.5 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="group-header">
+        <span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#dbe4ff;color:#364fc7;'>HR</span>
+        <span class="reason">인사모듈 세법변경 업데이트 반영</span>
+        <span class="meta">2026-06-08</span>
+        <span class="count">1건</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:28%">파일명</th>
+                <th style="width:30%">전체 경로</th>
+                <th style="width:14%">변경일시</th>
+                <th style="width:9%">파일크기</th>
+                <th style="width:7%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">12</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">uniERP.WebApp.WebSiteNETv2.HR_2026.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\WebRoot\bin\</td>
+                <td class="cell-center cell-date">2026-06-08 14:50:24</td>
+                <td class="cell-size">573.5 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#f3e8ff;color:#7048e8;'>WebApp</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="group-header">
+        <span style='display:inline-block;padding:1px 8px;border-radius:3px;font-size:10px;font-weight:700;background:#fff3bf;color:#e67700;'>TAX</span>
+        <span class="reason">인사모듈 세법변경 업데이트 반영</span>
+        <span class="meta">2026-06-10</span>
+        <span class="count">1건</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:4%">#</th>
+                <th style="width:8%">드라이브</th>
+                <th style="width:28%">파일명</th>
+                <th style="width:30%">전체 경로</th>
+                <th style="width:14%">변경일시</th>
+                <th style="width:9%">파일크기</th>
+                <th style="width:7%">유형</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="cell-center">13</td>
+                <td class="cell-center"><span class="drive-badge">D</span></td>
+                <td class="cell-mono">Bizentro.App.UI.TAX.TH105OA1.dll</td>
+                <td class="cell-path">D:\Bizentro.NET\BizWebSmart\Default\UI\TAX\</td>
+                <td class="cell-center cell-date">2026-06-10 16:39:12</td>
+                <td class="cell-size">134.5 KB</td>
+                <td class="cell-center"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="section-title">
+        파일 분석 요약
+        <span class="badge badge-info">통계</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:20%">구분</th>
+                <th style="width:16%">파일 수</th>
+                <th style="width:16%">비율</th>
+                <th style="width:48%">설명</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding:8px;border:1px solid #dee2e6;font-weight:600;"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#d3f9d8;color:#2b8a3e;'>UI</span> UI 계층</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;font-weight:700;">12</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;">92.3%</td>
+                <td style="padding:8px;border:1px solid #dee2e6;font-size:11px;color:#666;">화면단 DLL (Bizentro.App.UI.*) - TAX 12건</td>
+            </tr>
+            <tr>
+                <td style="padding:8px;border:1px solid #dee2e6;font-weight:600;"><span style='display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;background:#f3e8ff;color:#7048e8;'>WebApp</span> WebApp 계층</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;font-weight:700;">1</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;">7.7%</td>
+                <td style="padding:8px;border:1px solid #dee2e6;font-size:11px;color:#666;">웹 애플리케이션 DLL (uniERP.WebApp.*) - HR 1건</td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th style="width:25%">드라이브</th>
+                <th style="width:15%">파일 수</th>
+                <th style="width:20%">총 크기</th>
+                <th style="width:40%">성격</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding:8px;border:1px solid #dee2e6;font-weight:600;"><span class="drive-badge">D</span> 운영서버</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;font-weight:700;color:#c92a2a;">13건</td>
+                <td class="cell-center" style="border:1px solid #dee2e6;">2939 KB</td>
+                <td style="padding:8px;border:1px solid #dee2e6;font-size:11px;color:#666;">실제 운영 환경 배포 파일 - <b style="color:#c92a2a;">ITGC 감사 대상</b></td>
+            </tr>
+        </tbody>
+    </table>
+    <p style="font-size:11px;color:#868e96;margin-top:10px;">※ 조회 범위: 1분기는 전 드라이브 스캔(소스 사본·지원폴더 포함 38건), 2분기부터 운영 배포 경로(D:\Bizentro.NET)로 한정하여 운영 반영분만 조회 (2026-07-02 확정).</p>
+
+    <div class="footer">
+        DLL 변경내역 상세 보고서 | FY26 2Q | 생성일: 2026-07-02 | 대상 시스템: [DB-ACCOUNT]<br>
+        본 문서는 DLL_FILES_2026-Q2.csv 원본 데이터 기준으로 자동 생성되었습니다.
+    </div>
+
+</div>
+</body>
+</html>
